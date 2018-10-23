@@ -23,9 +23,6 @@ func init() {
 }
 
 func main() {
-
-	//getSuggestions("The Way")
-
 	router := mux.NewRouter()
 	router.HandleFunc(apiPath+"suggestions", getSuggestions).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8000", router))
@@ -36,7 +33,6 @@ func initDB() *sql.DB {
 	DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS := getDBConfig()
 	//build connection detail string
 	dbConfig := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME)
-	fmt.Println(dbConfig)
 
 	//try to establish database connection
 	db, err := sql.Open("postgres", dbConfig)

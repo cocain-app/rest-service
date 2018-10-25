@@ -1,0 +1,17 @@
+[weights]
+bpm = 1.0
+key = 1.0
+reputation = 1.0
+energy = 1.0
+instrumental = 1.0
+danceability = 1.0
+loudness = 1.0
+valence = 1.0
+timeSignature = 1.0
+genre = 1.0
+artist = 1.0
+festival = 1.0
+duration = 1.0
+existing = 1.0
+blacklist = 1.0
+libary = 1.0

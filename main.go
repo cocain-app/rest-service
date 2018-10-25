@@ -3,13 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 const (
@@ -25,7 +25,9 @@ func init() {
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc(apiPath+"suggestions", getSuggestions).Methods("GET")
-	log.Fatal(http.ListenAndServe(":8000", router))
+	router.HandleFunc(apiPath+"id", getSongID).Methods("GET")
+	handler := cors.Default().Handler(router)
+	fmt.Println(http.ListenAndServe(":8000", handler))
 }
 
 func initDB() *sql.DB {

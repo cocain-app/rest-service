@@ -9,13 +9,13 @@ import (
 )
 
 func getSuggestions(w http.ResponseWriter, r *http.Request) {
+	songID := r.Header.Get("songID")
 
-	songTitle := r.Header.Get("songTitle")
 	db := initDB()
 	defer db.Close()
 	rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artistName, count(songs.id) as score from songs join artists on artists.id = songs.artist_id "+
-		"join transitions on transitions.song_to=songs.id where transitions.song_from = (select id from songs where songs.title like $1 limit 1) "+
-		"group by songs.id, artists.id order by score desc", songTitle)
+		"join transitions on transitions.song_to=songs.id where transitions.song_from=$1 "+
+		"group by songs.id, artists.id order by score desc", songID)
 	checkErr(err, "Query error!")
 
 	var suggestions []Song
@@ -34,9 +34,13 @@ func getSuggestions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(suggestions)
 }
 
-/*
-func getSongID(songTitle string, db *sql.DB) (songID string, err error) {
-	rows, err := db.Query("SELECT id FROM public.songs WHERE title=$1", songTitle)
+func getSongID(w http.ResponseWriter, r *http.Request) {
+	songTitle := r.Header.Get("songTitle")
+	songID := ""
+
+	db := initDB()
+	defer db.Close()
+	rows, err := db.Query("SELECT id FROM public.songs WHERE title ILIKE $1", songTitle)
 	checkErr(err, "2: Query error!")
 
 	for rows.Next() {
@@ -47,12 +51,10 @@ func getSongID(songTitle string, db *sql.DB) (songID string, err error) {
 		songID = id.String //Catch multiple ids
 	}
 
-	if songID == "" {
-		err = errors.New("sql error: no query results")
-	}
-	return
+	json.NewEncoder(w).Encode(songID)
 }
 
+/*
 func getTransitions(songID string, db *sql.DB) (transitions []string, err error) {
 	rows, err := db.Query("SELECT song_to FROM public.transitions WHERE song_from=$1", songID)
 	checkErr(err, "3: Query error!")

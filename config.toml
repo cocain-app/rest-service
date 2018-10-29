@@ -1,3 +1,5 @@
+Title = "Toml Config"
+
 [weights]
 bpm = 1.0
 key = 1.0

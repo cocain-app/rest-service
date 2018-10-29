@@ -104,28 +104,30 @@ func calcRepScore(rep []int) (res []float64) {
 func calcTransScore(occ, div, bpm, key, rep, energy, instrum, dance, loud, valence, timeSign, genre, artist, festival, dur, exist, blackl, libary float64) (score float64) {
 	//occ - occurances score
 	//div - diversity score
-	//bpm - bpm difference
-	//key - key difference
-	//rep - reputation score
-	//energy - energy difference
-	//instrum - instrumental difference
-	//dance - danceability difference
-	//loud - loudness difference
-	//valence - valence difference
-	//timeSign - time signature difference
-	//genre - gerne option
-	//artist - artist option
-	//festival - festival option
-	//dur - duration option
-	//exist - existing option
-	//blackl - blacklist option
-	//libary - libary option
+	//bpm - B - bpm difference
+	//key - K - key difference
+	//rep - R - reputation score
+	//energy - En - energy difference
+	//instrum - I - instrumental difference
+	//dance - Da - danceability difference
+	//loud - Lo - loudness difference
+	//valence - V - valence difference
+	//timeSign - T - time signature difference
+	//genre - G - gerne option
+	//artist - A - artist option
+	//festival - F - festival option
+	//dur - Du - duration option
+	//exist - Ex - existing option
+	//blackl - Bl - blacklist option
+	//libary - Li - libary option
 
-	var w Weights
-	_, err := toml.Decode("config.toml", &w)
+	var config tomlConfig
+	_, err := toml.DecodeFile("config.toml", &config)
 	checkErr(err, "Import of config failed!")
 
-	score = occ * div * math.Sqrt(w.K*math.Pow(key, 2)+w.B*math.Pow(bpm, 2)+w.R*math.Pow(rep, 2)+w.En*math.Pow(energy, 2)+w.I*math.Pow(instrum, 2)+w.Da*math.Pow(instrum, 2)+w.Lo*math.Pow(loud, 2)+w.V*math.Pow(valence, 2)+w.T*math.Pow(timeSign, 2)+w.G*math.Pow(genre, 2)+w.A*math.Pow(artist, 2)+w.F*math.Pow(festival, 2)+w.Du*math.Pow(dur, 2)+w.Ex*math.Pow(exist, 2)+w.Bl*math.Pow(blackl, 2)+w.Li*math.Pow(libary, 2))
+	w := config.Weights
+
+	score = occ * div * math.Sqrt(w.Key*math.Pow(key, 2)+w.BPM*math.Pow(bpm, 2)+w.R*math.Pow(rep, 2)+w.En*math.Pow(energy, 2)+w.I*math.Pow(instrum, 2)+w.Da*math.Pow(dance, 2)+w.Lo*math.Pow(loud, 2)+w.V*math.Pow(valence, 2)+w.T*math.Pow(timeSign, 2)+w.G*math.Pow(genre, 2)+w.A*math.Pow(artist, 2)+w.F*math.Pow(festival, 2)+w.Du*math.Pow(dur, 2)+w.Ex*math.Pow(exist, 2)+w.Bl*math.Pow(blackl, 2)+w.Li*math.Pow(libary, 2))
 
 	return
 

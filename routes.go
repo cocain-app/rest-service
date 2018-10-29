@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
 func getSuggestions(w http.ResponseWriter, r *http.Request) {
-	songID := r.Header.Get("songID")
+	songID := mux.Vars(r)["id"]
 
 	db := initDB()
 	defer db.Close()
@@ -36,58 +37,45 @@ func getSuggestions(w http.ResponseWriter, r *http.Request) {
 
 func getSongID(w http.ResponseWriter, r *http.Request) {
 	songTitle := r.Header.Get("songTitle")
-	songID := ""
+	queryTitle := "%" + songTitle + "%"
+	var ids []Song
 
 	db := initDB()
 	defer db.Close()
-	rows, err := db.Query("SELECT id FROM public.songs WHERE title ILIKE $1", songTitle)
+	rows, err := db.Query("SELECT songs.id AS id, songs.title AS title, artists.name AS artistName, count(songs.id) AS score FROM songs JOIN artists ON artists.id = songs.artist_id "+
+		"WHERE title ILIKE $1 ORDER BY score DESC LIMIT 10 ", queryTitle)
 	checkErr(err, "2: Query error!")
 
 	for rows.Next() {
 		var id sql.NullString
-		err = rows.Scan(&id)
+		var title sql.NullString
+		var artistName sql.NullString
+		var score sql.NullInt64
+		err = rows.Scan(&id, &title, &artistName, &score)
 		checkErr(err, "Corrupt data format!")
 
-		songID = id.String //Catch multiple ids
+		ids = append(ids, Song{ID: id.String, Title: title.String, Artist: artistName.String, NumberOfSets: score.Int64})
 	}
 
+	json.NewEncoder(w).Encode(ids)
+}
+
+func getSongData(w http.ResponseWriter, r *http.Request) {
+	songID := mux.Vars(r)["id"]
+	//TODO
+	/*
+		db := initDB()
+		defer db.Close()
+		rows, err := db.Query("SELECT title FROM public.songs WHERE id=$1", songID)
+		checkErr(err, "2: Query error!")
+
+		for rows.Next() {
+			var id sql.NullString
+			err = rows.Scan(&id)
+			checkErr(err, "Corrupt data format!")
+
+			songID = id.String //Catch multiple ids
+		}
+	*/
 	json.NewEncoder(w).Encode(songID)
 }
-
-/*
-func getTransitions(songID string, db *sql.DB) (transitions []string, err error) {
-	rows, err := db.Query("SELECT song_to FROM public.transitions WHERE song_from=$1", songID)
-	checkErr(err, "3: Query error!")
-
-	for rows.Next() {
-		var song_to sql.NullString
-		err = rows.Scan(&song_to)
-		checkErr(err, "Corrupt data format!")
-
-		transitions = append(transitions, song_to.String) //Catch multiple ids
-	}
-
-	if len(transitions) <= 0 {
-		err = errors.New("sql error: no query results")
-	}
-	return
-}
-
-func getArtist(artistID string, db *sql.DB) (artistName string, err error) {
-	rows, err := db.Query("SELECT name FROM public.artists WHERE id=$1", artistID)
-	checkErr(err, "4: Query error!")
-
-	for rows.Next() {
-		var name sql.NullString
-		err = rows.Scan(&name)
-		checkErr(err, "Corrupt data format!")
-
-		artistName = name.String //Catch multiple ids
-	}
-
-	if artistID == "" {
-		err = errors.New("sql error: no query results")
-	}
-	return
-}
-*/

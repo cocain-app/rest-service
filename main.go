@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	apiPath = "/api/"
+	apiPath = "/api"
 )
 
 func init() {
@@ -26,12 +26,13 @@ func main() {
 	//fmt.Println(calcTransScore(2.0, 0.5, 0.9887483727, 1.0, 1.0, 0.942, 0.9947259, 0.989, 0.7371124215, 0.678, 0, 0, 0, 0, 0, 0, 0, 0))
 
 	router := mux.NewRouter()
-	router.HandleFunc(apiPath+"suggestions/{id}", getSuggestions).Methods("GET")
-	router.HandleFunc(apiPath+"search", getSongs).Methods("GET")
-	//router.HandleFunc(apiPath+"search/id", getSongID).Methods("GET")
-	router.HandleFunc(apiPath+"songs/{id}", getSongData).Methods("GET")
+	router.HandleFunc(apiPath, isOnline).Methods("GET")
+	router.HandleFunc(apiPath+"/search", getSongs).Methods("GET")
+	router.HandleFunc(apiPath+"/songs/transitions/{id}", getTransitions).Methods("GET")
+	router.HandleFunc(apiPath+"/songs/get/{id}", getSongData).Methods("GET")
 	handler := cors.Default().Handler(router)
-	fmt.Println(http.ListenAndServe(":8000", handler))
+	http.ListenAndServe(":8000", handler)
+	fmt.Println("Started server!")
 }
 
 func initDB() *sql.DB {

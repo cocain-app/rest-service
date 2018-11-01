@@ -15,30 +15,9 @@ import (
 func getTransitions(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
 
-	db := initDB()
-	defer db.Close()
-	rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artistName, count(songs.id) as score from songs join artists on artists.id = songs.artist_id "+
-		"join transitions on transitions.song_to=songs.id where transitions.song_from=$1 "+
-		"group by songs.id, artists.id order by score desc", songID)
-	checkErr(err, "Query error!")
-
-	var transitions []SongSuggestion
-
-	for rows.Next() {
-		var id sql.NullString
-		var title sql.NullString
-		var artistName sql.NullString
-		var score sql.NullInt64
-		err = rows.Scan(&id, &title, &artistName, &score)
-		checkErr(err, "Corrupt data format!")
-
-		transitions = append(transitions, SongSuggestion{ID: id.String, Title: title.String, Artist: artistName.String, NumberOfSets: score.Int64})
-	}
-
-	for _, song := range transitions {
-		fmt.Println(song)
-	}
-
+	var transitions []Transition
+	songData := getSongData(songID)
+	transitions = getTransitionData(songData)
 	json.NewEncoder(w).Encode(transitions)
 }
 
@@ -72,7 +51,7 @@ func getSongs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(ids)
 }
 
-func getSongData(w http.ResponseWriter, r *http.Request) {
+func getSongDetails(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
 	fmt.Println(songID)
 
@@ -113,24 +92,6 @@ func getSongData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(song)
-}
-
-func getSongDataDetail(songID string) {
-
-	db := initDB()
-	defer db.Close()
-	rows, err := db.Query("SELECT title FROM public.songs WHERE id=$1", songID)
-	checkErr(err, "4: Query error!")
-
-	for rows.Next() {
-		var id sql.NullString
-		err = rows.Scan(&id)
-		checkErr(err, "Corrupt data format!")
-
-		songID = id.String //Catch multiple ids
-	}
-
-	return
 }
 
 func isOnline(w http.ResponseWriter, r *http.Request) {

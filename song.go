@@ -33,9 +33,8 @@ type SongDetailed struct {
 	Artist        string  `json:"Artist,omitempty"`
 	PreviewURL    string  `json:"PreviewURL,omitempty"`
 	CoverURL      string  `json:"CoverURL,omitempty"`
-	NumberOfSets  int64   `json:"NumberOfSets,omitempty"`
 	BPM           float64 `json:"BPM,omitempty"`
-	Key           int64   `json:"Key,omitempty"`
+	Key           string  `json:"Key,omitempty"`
 	Reputation    int64   `json:"Reputation,omitempty"`
 	Energy        float64 `json:"Energy,omitempty"`
 	Instrumental  float64 `json:"Instrumental,omitempty"`

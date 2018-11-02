@@ -28,20 +28,21 @@ type Song struct {
 
 //occ, div, bpm, key, rep, energy, instrum, dance, loud, valence, timeSign, genre, artist, festival, dur, exist, blackl, libary
 type SongDetailed struct {
-	ID            string  `json:"ID,omitempty"`
-	Title         string  `json:"Title,omitempty"`
-	Artist        string  `json:"Artist,omitempty"`
-	PreviewURL    string  `json:"PreviewURL,omitempty"`
-	CoverURL      string  `json:"CoverURL,omitempty"`
-	BPM           float64 `json:"BPM,omitempty"`
-	Key           string  `json:"Key,omitempty"`
-	Reputation    int64   `json:"Reputation,omitempty"`
-	Energy        float64 `json:"Energy,omitempty"`
-	Instrumental  float64 `json:"Instrumental,omitempty"`
-	Danceability  float64 `json:"Danceability,omitempty"`
-	Loudness      float64 `json:"Loudness,omitempty"`
-	Valence       float64 `json:"Valence,omitempty"`
-	TimeSignature float64 `json:"TimeSignature,omitempty"`
-	Genre         string  `json:"Genre,omitempty"`
-	Duration      float64 `json:"Duration,omitempty"`
+	ID            string   `json:"ID,omitempty"`
+	Title         string   `json:"Title,omitempty"`
+	Artist        string   `json:"Artist,omitempty"`
+	PreviewURL    string   `json:"PreviewURL,omitempty"`
+	CoverURL      string   `json:"CoverURL,omitempty"`
+	BPM           float64  `json:"BPM,omitempty"`
+	KeyNotation   [2]int64 `json:"KeyNotation,omitempty"`
+	Key           string   `json:"Key,omitempty"`
+	Reputation    int64    `json:"Reputation,omitempty"`
+	Energy        float64  `json:"Energy,omitempty"`
+	Instrumental  float64  `json:"Instrumental,omitempty"`
+	Danceability  float64  `json:"Danceability,omitempty"`
+	Loudness      float64  `json:"Loudness,omitempty"`
+	Valence       float64  `json:"Valence,omitempty"`
+	TimeSignature float64  `json:"TimeSignature,omitempty"`
+	Genre         string   `json:"Genre,omitempty"`
+	Duration      float64  `json:"Duration,omitempty"`
 }

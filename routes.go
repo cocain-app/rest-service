@@ -18,6 +18,17 @@ func getTransitions(w http.ResponseWriter, r *http.Request) {
 	var transitions []Transition
 	songData := getSongData(songID)
 	transitions = getTransitionData(songData)
+
+	for _, transition := range transitions {
+		calcTransScore(&transition)
+	}
+
+	sort.Slice(transitions, func(i, j int) bool {
+		return transitions[i].Score < transitions[j].Score
+	})
+
+	//get short transition object
+
 	json.NewEncoder(w).Encode(transitions)
 }
 

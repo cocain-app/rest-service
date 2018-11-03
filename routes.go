@@ -19,12 +19,16 @@ func getTransitions(w http.ResponseWriter, r *http.Request) {
 	songData := getSongData(songID)
 	transitions = getTransitionData(songData)
 
-	for _, transition := range transitions {
-		calcTransScore(&transition)
+	for i, transition := range transitions {
+		if transition.FromSong.BPM != 0 && transition.ToSong.BPM != 0 {
+			transitions[i] = calcTransScore(transition)
+		} else {
+			transitions[i].Score = 0
+		}
 	}
 
 	sort.Slice(transitions, func(i, j int) bool {
-		return transitions[i].Score < transitions[j].Score
+		return transitions[i].Score > transitions[j].Score
 	})
 
 	//get short transition object

@@ -30,6 +30,7 @@ func main() {
 	router.HandleFunc(apiPath+"/search", getSongs).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/transitions/{id}", getTransitions).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}", getSongDetails).Methods("GET")
+	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
 	handler := cors.Default().Handler(router)
 	http.ListenAndServe(":8000", handler)
 	fmt.Println("Started server!")

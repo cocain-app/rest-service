@@ -101,7 +101,7 @@ func calcRepScore(rep []int) (res []float64) {
 	return
 }
 
-func calcTransScore(transition Transition) (convertedTransition Transition) {
+func calcTransScore(transition TransitionDetailed) (convertedTransition TransitionDetailed) {
 	//occ - occurances score
 	//div - diversity score
 	//bpm - B - bpm difference
@@ -146,7 +146,7 @@ func calcTransScore(transition Transition) (convertedTransition Transition) {
 	key := calcKeyDif(fromSong.KeyNotation[0], toSong.KeyNotation[0]) //TODO: include mode
 	var rep float64
 	energy := 1 - math.Abs(fromSong.Energy-toSong.Energy)
-	instrum := 1 - math.Abs(fromSong.Instrumental-toSong.Instrumental)
+	var instrum float64
 	dance := 1 - math.Abs(fromSong.Danceability-toSong.Danceability)
 	loud := 1 - math.Abs(fromSong.Loudness-toSong.Loudness)
 	valence := math.Abs(fromSong.Valence - toSong.Valence)
@@ -154,7 +154,7 @@ func calcTransScore(transition Transition) (convertedTransition Transition) {
 
 	score := occ * div * math.Sqrt(w.Key*math.Pow(key, 2)+w.BPM*math.Pow(bpm, 2)+w.R*math.Pow(rep, 2)+w.En*math.Pow(energy, 2)+w.I*math.Pow(instrum, 2)+w.Da*math.Pow(dance, 2)+w.Lo*math.Pow(loud, 2)+w.V*math.Pow(valence, 2)+w.T*math.Pow(timeSign, 2)+w.G*math.Pow(genre, 2)+w.A*math.Pow(artist, 2)+w.F*math.Pow(festival, 2)+w.Du*math.Pow(dur, 2)+w.Ex*math.Pow(exist, 2)+w.Bl*math.Pow(blackl, 2)+w.Li*math.Pow(libary, 2))
 
-	convertedTransition = Transition{FromSong: fromSong, ToSong: toSong, Occasions: transition.Occasions, Score: score}
+	convertedTransition = TransitionDetailed{FromSong: fromSong, ToSong: toSong, Occasions: transition.Occasions, Score: score}
 
 	return
 }

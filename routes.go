@@ -14,56 +14,88 @@ import (
 
 func getTransitions(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
+	fmt.Println(songID)
+
+	var plainTransitions []TransitionDetailed
+	songData := getSongData(songID)
+	plainTransitions = getTransitionData(songData)
+
+	for i, transition := range plainTransitions {
+		if transition.FromSong.BPM != 0 && transition.ToSong.BPM != 0 {
+			plainTransitions[i] = calcTransScore(transition)
+		} else {
+			plainTransitions[i].Score = 0
+		}
+	}
 
 	var transitions []Transition
-	songData := getSongData(songID)
-	transitions = getTransitionData(songData)
 
-	for i, transition := range transitions {
-		if transition.FromSong.BPM != 0 && transition.ToSong.BPM != 0 {
-			transitions[i] = calcTransScore(transition)
-		} else {
-			transitions[i].Score = 0
-		}
+	for _, t := range plainTransitions {
+		toSong := simSong(t.ToSong)
+		transitions = append(transitions, Transition{ToSong: toSong, Score: t.Score})
 	}
 
 	sort.Slice(transitions, func(i, j int) bool {
 		return transitions[i].Score > transitions[j].Score
 	})
 
-	//get short transition object
+	rTransitions := ReturnTransition{FromSong: songID, Transitions: transitions}
 
-	json.NewEncoder(w).Encode(transitions)
+	json.NewEncoder(w).Encode(rTransitions)
 }
 
 func getSongs(w http.ResponseWriter, r *http.Request) {
 	songTitle := r.Header.Get("songTitle")
-	queryTitle := "%" + songTitle + "%"
-	var ids []SongSuggestion
-	titleLength := len(songTitle)
+	fmt.Println(songTitle)
 
-	db := initDB()
-	defer db.Close()
-	rows, err := db.Query("SELECT songs.id AS id, songs.title AS title, artists.name AS artistName, count(songs.id) AS score FROM songs JOIN artists ON artists.id = songs.artist_id "+
-		"WHERE title ILIKE $1 GROUP BY songs.id, artists.id ORDER BY score desc LIMIT 10 ", queryTitle)
-	checkErr(err, "2: Query error!")
+	var songs []SearchSong
 
-	for rows.Next() {
-		var id sql.NullString
-		var title sql.NullString
-		var artistName sql.NullString
-		var score sql.NullInt64
-		err = rows.Scan(&id, &title, &artistName, &score)
-		checkErr(err, "Corrupt data format!")
+	if songTitle != "" {
 
-		ids = append(ids, SongSuggestion{ID: id.String, Title: title.String, Artist: artistName.String, NumberOfSets: score.Int64, LenDiff: math.Abs(float64(titleLength - len(title.String)))})
+		queryTitle := "%" + songTitle + "%"
+
+		db := initDB()
+		defer db.Close()
+		rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, "+
+			"spotify_songs.key as key, spotify_songs.mode as mode, spotify_songs.duration_ms as duration, count(songs.id) as score "+
+			"from songs join artists on artists.id = songs.artist_id join spotify_songs on spotify_songs.song_id = songs.id "+
+			"where title ILIKE $1 group by songs.id, artists.id, spotify_songs.tempo, spotify_songs.key, spotify_songs.mode, "+
+			"spotify_songs.duration_ms order by score desc limit 10 ", queryTitle)
+		checkErr(err, "2: Query error!")
+
+		titleLength := len(songTitle)
+
+		for rows.Next() {
+			var id sql.NullString
+			var title sql.NullString
+			var artist sql.NullString
+			var bpm sql.NullFloat64
+			var key sql.NullInt64
+			var mode sql.NullInt64
+			var duration sql.NullInt64
+			var score sql.NullInt64
+			err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &duration, &score)
+			checkErr(err, "Corrupt data format!")
+
+			keyString := convertKey(key.Int64, mode.Int64)
+
+			songs = append(songs, SearchSong{
+				Song: Song{
+					ID:       id.String,
+					Title:    title.String,
+					Artist:   artist.String,
+					BPM:      bpm.Float64,
+					Key:      keyString,
+					Duration: duration.Int64},
+				LenDiff: math.Abs(float64(titleLength - len(title.String)))})
+		}
+
+		sort.Slice(songs, func(i, j int) bool {
+			return songs[i].LenDiff < songs[j].LenDiff
+		})
 	}
 
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i].LenDiff < ids[j].LenDiff
-	})
-
-	json.NewEncoder(w).Encode(ids)
+	json.NewEncoder(w).Encode(songs)
 }
 
 func getSongDetails(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +105,7 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 	db := initDB()
 	defer db.Close()
 	rows, err := db.Query("select songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, spotify_songs.key as key, "+
-		"spotify_songs.mode as mode, spotify_songs.energy as energy, spotify_songs.duration_ms as duration from songs join artists on artists.id = songs.artist_id "+
+		"spotify_songs.mode as mode, spotify_songs.duration_ms as duration from songs join artists on artists.id = songs.artist_id "+
 		"join spotify_songs on spotify_songs.song_id = songs.id "+
 		"where songs.id = $1", songID)
 	checkErr(err, "3: Query error!")
@@ -86,13 +118,11 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 		var bpm sql.NullFloat64
 		var key sql.NullInt64
 		var mode sql.NullInt64
-		var energy sql.NullFloat64
-		var duration sql.NullFloat64
-		err = rows.Scan(&title, &artist, &bpm, &key, &mode, &energy, &duration)
+		var duration sql.NullInt64
+		err = rows.Scan(&title, &artist, &bpm, &key, &mode, &duration)
 		checkErr(err, "Corrupt data format!")
 
 		keyString := convertKey(key.Int64, mode.Int64)
-		fmt.Println(title.String)
 
 		song = Song{
 			ID:         songID,
@@ -100,11 +130,19 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 			Artist:     artist.String,
 			BPM:        bpm.Float64,
 			Key:        keyString,
-			Energy:     energy.Float64,
-			Duration:   duration.Float64,
+			Duration:   duration.Int64,
 			PreviewURL: "",
 			CoverURL:   ""}
 	}
+
+	json.NewEncoder(w).Encode(song)
+}
+
+func getAllSongDetails(w http.ResponseWriter, r *http.Request) {
+	songID := mux.Vars(r)["id"]
+	fmt.Println(songID)
+
+	song := getSongData(songID)
 
 	json.NewEncoder(w).Encode(song)
 }

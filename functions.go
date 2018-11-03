@@ -95,7 +95,7 @@ func getSongData(songID string) (songObject SongDetailed) {
 		var danceability sql.NullFloat64
 		var loudness sql.NullFloat64
 		var timeSignature sql.NullFloat64
-		var duration sql.NullFloat64
+		var duration sql.NullInt64
 		err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration)
 		checkErr(err, "Corrupt data format!")
 
@@ -107,6 +107,7 @@ func getSongData(songID string) (songObject SongDetailed) {
 			Artist:        artist.String,
 			BPM:           bpm.Float64,
 			Key:           keyString,
+			KeyNotation:   [2]int64{key.Int64, mode.Int64},
 			Reputation:    0,
 			Energy:        energy.Float64,
 			Instrumental:  instrumental.Float64,
@@ -114,7 +115,7 @@ func getSongData(songID string) (songObject SongDetailed) {
 			Loudness:      loudness.Float64,
 			Valence:       valence.Float64,
 			TimeSignature: timeSignature.Float64,
-			Duration:      duration.Float64,
+			Duration:      duration.Int64,
 			Genre:         "",
 			PreviewURL:    "",
 			CoverURL:      ""}
@@ -123,7 +124,7 @@ func getSongData(songID string) (songObject SongDetailed) {
 
 }
 
-func getTransitionData(fromSong SongDetailed) (transitions []Transition) {
+func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed) {
 
 	if fromSong.ID != "" {
 		db := initDB()
@@ -156,7 +157,7 @@ func getTransitionData(fromSong SongDetailed) (transitions []Transition) {
 			var danceability sql.NullFloat64
 			var loudness sql.NullFloat64
 			var timeSignature sql.NullFloat64
-			var duration sql.NullFloat64
+			var duration sql.NullInt64
 			var occasions sql.NullInt64
 			err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration, &occasions)
 			checkErr(err, "Corrupt data format!")
@@ -176,14 +177,26 @@ func getTransitionData(fromSong SongDetailed) (transitions []Transition) {
 				Loudness:      loudness.Float64,
 				Valence:       valence.Float64,
 				TimeSignature: timeSignature.Float64,
-				Duration:      duration.Float64,
+				Duration:      duration.Int64,
 				Genre:         "",
 				PreviewURL:    "",
 				CoverURL:      ""}
 
-			transitions = append(transitions, Transition{FromSong: fromSong, ToSong: toSong, Occasions: occasions.Int64})
+			transitions = append(transitions, TransitionDetailed{FromSong: fromSong, ToSong: toSong, Occasions: occasions.Int64})
 		}
 	}
 	return
+}
 
+func simSong(songS SongDetailed) (songT Song) {
+	songT = Song{
+		ID:         songS.ID,
+		Title:      songS.Title,
+		Artist:     songS.Artist,
+		BPM:        songS.BPM,
+		Key:        songS.Key,
+		Duration:   songS.Duration,
+		PreviewURL: songS.PreviewURL,
+		CoverURL:   songS.CoverURL}
+	return
 }

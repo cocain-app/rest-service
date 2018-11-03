@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/rs/cors"
 )
 
 const (
@@ -23,16 +23,15 @@ func init() {
 }
 
 func main() {
-	//fmt.Println(calcTransScore(2.0, 0.5, 0.9887483727, 1.0, 1.0, 0.942, 0.9947259, 0.989, 0.7371124215, 0.678, 0, 0, 0, 0, 0, 0, 0, 0))
-
 	router := mux.NewRouter()
 	router.HandleFunc(apiPath, isOnline).Methods("GET")
 	router.HandleFunc(apiPath+"/search", getSongs).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/transitions/{id}", getTransitions).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}", getSongDetails).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
-	handler := cors.Default().Handler(router)
-	http.ListenAndServe(":8000", handler)
+
+	corsHeader := handlers.AllowedOrigins([]string{"*"})
+	http.ListenAndServe(":8000", handlers.CORS(corsHeader)(router))
 	fmt.Println("Started server!")
 }
 

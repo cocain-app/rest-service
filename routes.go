@@ -41,6 +41,9 @@ func getTransitions(w http.ResponseWriter, r *http.Request) {
 
 	rTransitions := ReturnTransition{FromSong: songID, Transitions: transitions}
 
+	w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(rTransitions)
 }
 
@@ -95,6 +98,9 @@ func getSongs(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(songs)
 }
 
@@ -135,6 +141,9 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 			CoverURL:   ""}
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(song)
 }
 
@@ -144,9 +153,13 @@ func getAllSongDetails(w http.ResponseWriter, r *http.Request) {
 
 	song := getSongData(songID)
 
+	w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(song)
 }
 
 func isOnline(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("Pong")
 }

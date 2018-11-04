@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 const (
@@ -31,11 +31,9 @@ func main() {
 	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
 
 	c := cors.New(cors.Options{
-		AllowedMethods: []string{"GET","POST", "OPTIONS"},
+		AllowedMethods: []string{"GET", "HEAD", "POST", "PUT", "OPTIONS"},
 		AllowedOrigins: []string{"*"},
-	  AllowCredentials: true,
-	  AllowedHeaders: []string{"Content-Type","Bearer","Bearer ","content-type","Origin","Accept"},
-	  OptionsPassthrough: true,
+	  AllowedHeaders: []string{"Content-Type", "X-Requested-With"},
 	})
 
 	http.ListenAndServe(":8000", c.Handler(router))

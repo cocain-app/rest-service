@@ -30,11 +30,15 @@ func main() {
 	router.HandleFunc(apiPath+"/songs/get/{id}", getSongDetails).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	c := cors.New(cors.Options{
+		AllowedMethods: []string{"GET","POST", "OPTIONS"},
+		AllowedOrigins: []string{"*"},
+	  AllowCredentials: true,
+	  AllowedHeaders: []string{"Content-Type","Bearer","Bearer ","content-type","Origin","Accept"},
+	  OptionsPassthrough: true,
+	})
 
-	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(router))
+	http.ListenAndServe(":8000", c.Handler(router))
 	fmt.Println("Started server!")
 }
 

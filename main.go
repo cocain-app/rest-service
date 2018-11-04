@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rs/cors"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -30,13 +30,11 @@ func main() {
 	router.HandleFunc(apiPath+"/songs/get/{id}", getSongDetails).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
 
-	c := cors.New(cors.Options{
-		AllowedMethods: []string{"GET", "HEAD", "POST", "PUT", "OPTIONS"},
-		AllowedOrigins: []string{"*"},
-	  AllowedHeaders: []string{"Content-Type", "X-Requested-With"},
-	})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
-	http.ListenAndServe(":8000", c.Handler(router))
+	http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(router))
 	fmt.Println("Started server!")
 }
 

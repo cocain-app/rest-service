@@ -84,7 +84,7 @@ func getSongs(w http.ResponseWriter, r *http.Request) {
 					ID:       id.String,
 					Title:    title.String,
 					Artist:   artist.String,
-					BPM:      bpm.Float64,
+					BPM:      round(bpm.Float64, 0.5),
 					Key:      keyString,
 					Duration: duration.Int64},
 				LenDiff: math.Abs(float64(titleLength - len(title.String)))})
@@ -128,7 +128,7 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 			ID:         songID,
 			Title:      title.String,
 			Artist:     artist.String,
-			BPM:        bpm.Float64,
+			BPM:        round(bpm.Float64, 0.5),
 			Key:        keyString,
 			Duration:   duration.Int64,
 			PreviewURL: "",

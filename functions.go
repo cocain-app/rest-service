@@ -8,55 +8,55 @@ func convertKey(key, mode int64) (keyString string) {
 	var modeS string
 
 	switch key {
-	case 1:
+	case 0:
 		keyS = "C"
 		break
-	case 2:
-		keyS = "G"
+	case 1:
+		keyS = "C#"
 		break
-	case 3:
+	case 2:
 		keyS = "D"
 		break
-	case 4:
-		keyS = "A"
+	case 3:
+		keyS = "D#"
 		break
-	case 5:
+	case 4:
 		keyS = "E"
 		break
-	case 6:
-		keyS = "B"
-		break
-	case 7:
-		keyS = "G𝄬/F#"
-		break
-	case 8:
-		keyS = "D𝄬"
-		break
-	case 9:
-		keyS = "A𝄬"
-		break
-	case 10:
-		keyS = "E𝄬"
-		break
-	case 11:
-		keyS = "B𝄬"
-		break
-	case 12:
+	case 5:
 		keyS = "F"
 		break
+	case 6:
+		keyS = "F#"
+		break
+	case 7:
+		keyS = "G"
+		break
+	case 8:
+		keyS = "G#"
+		break
+	case 9:
+		keyS = "A"
+		break
+	case 10:
+		keyS = "A#"
+		break
+	case 11:
+		keyS = "B"
+		break
 	default:
-		keyS = "/"
+		keyS = ""
 	}
 
 	switch mode {
 	case 0:
-		modeS = "Dur"
-		break
-	case 1:
 		modeS = "Major"
 		break
+	case 1:
+		modeS = "Minor"
+		break
 	default:
-		keyS = "/"
+		keyS = ""
 	}
 
 	keyString = keyS + " " + modeS

@@ -12,14 +12,15 @@ type SearchSong struct {
 
 //Song ...
 type Song struct {
-	ID         string  `json:"ID,omitempty"`
-	Title      string  `json:"Title,omitempty"`
-	Artist     string  `json:"Artist,omitempty"`
-	BPM        float64 `json:"BPM,omitempty"`
-	Key        string  `json:"Key,omitempty"`
-	Duration   int64   `json:"Duration,omitempty"`
-	PreviewURL string  `json:"PreviewURL,omitempty"`
-	CoverURL   string  `json:"CoverURL,omitempty"`
+	ID            string  `json:"ID,omitempty"`
+	Title         string  `json:"Title,omitempty"`
+	Artist        string  `json:"Artist,omitempty"`
+	BPM           float64 `json:"BPM,omitempty"`
+	Key           string  `json:"Key,omitempty"`
+	Duration      int64   `json:"Duration,omitempty"`
+	PreviewURL    string  `json:"PreviewURL,omitempty"`
+	ImageURL      string  `json:"ImageURL,omitempty"`
+	ImageURLSmall string  `json:"ImageURLSmall,omitempty"`
 }
 
 //SongDetailed ...
@@ -28,7 +29,8 @@ type SongDetailed struct {
 	Title         string   `json:"Title,omitempty"`
 	Artist        string   `json:"Artist,omitempty"`
 	PreviewURL    string   `json:"PreviewURL,omitempty"`
-	CoverURL      string   `json:"CoverURL,omitempty"`
+	ImageURL      string   `json:"ImageURL,omitempty"`
+	ImageURLSmall string   `json:"ImageURLSmall,omitempty"`
 	BPM           float64  `json:"BPM,omitempty"`
 	KeyNotation   [2]int64 `json:"KeyNotation,omitempty"`
 	Key           string   `json:"Key,omitempty"`

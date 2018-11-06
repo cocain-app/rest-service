@@ -71,14 +71,15 @@ func getSongData(songID string) (songObject SongDetailed) {
 	rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, spotify_songs.key as key, "+
 		"spotify_songs.mode as mode, spotify_songs.energy as energy, spotify_songs.instrumentalness as instrumental, spotify_songs.valence, "+
 		"spotify_songs.danceability as danceability, spotify_songs.loudness as loudness, spotify_songs.time_signature as timeSignature, "+
-		"spotify_songs.duration_ms as duration "+
+		"spotify_songs.duration_ms as duration, spotify_songs.preview_url as previewURL, spotify_songs.image_url_large as imageURL, spotify_songs.image_url_small as imageURLSmall "+
 		"from songs "+
 		"join artists on artists.id = songs.artist_id "+
 		"join spotify_songs on spotify_songs.song_id = songs.id "+
 		"where songs.id = $1 "+
 		"group by "+
 		"songs.id, songs.title, artists.name, spotify_songs.tempo, spotify_songs.key, spotify_songs.mode, spotify_songs.energy, spotify_songs.instrumentalness, "+
-		"spotify_songs.valence, spotify_songs.danceability, spotify_songs.loudness, spotify_songs.time_signature, spotify_songs.duration_ms", songID)
+		"spotify_songs.valence, spotify_songs.danceability, spotify_songs.loudness, spotify_songs.time_signature, spotify_songs.duration_ms, "+
+		"spotify_songs.preview_url, spotify_songs.image_url_large, spotify_songs.image_url_small", songID)
 	checkErr(err, "4: Query error!")
 
 	//id, title, artist, previw, cover, numberofsets, bpm, key, rep, energy, instrum, dance, loud, val, timeS, Genre, Dur
@@ -96,7 +97,10 @@ func getSongData(songID string) (songObject SongDetailed) {
 		var loudness sql.NullFloat64
 		var timeSignature sql.NullFloat64
 		var duration sql.NullInt64
-		err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration)
+		var previewURL sql.NullString
+		var imageURL sql.NullString
+		var imageURLSmall sql.NullString
+		err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration, &previewURL, &imageURL, &imageURLSmall)
 		checkErr(err, "Corrupt data format!")
 
 		keyString := convertKey(key.Int64, mode.Int64)
@@ -117,8 +121,9 @@ func getSongData(songID string) (songObject SongDetailed) {
 			TimeSignature: timeSignature.Float64,
 			Duration:      duration.Int64,
 			Genre:         "",
-			PreviewURL:    "",
-			CoverURL:      ""}
+			PreviewURL:    previewURL.String,
+			ImageURL:      imageURL.String,
+			ImageURLSmall: imageURLSmall.String}
 	}
 	return
 
@@ -132,7 +137,7 @@ func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed)
 		rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, spotify_songs.key as key, "+
 			"spotify_songs.mode as mode, spotify_songs.energy as energy, spotify_songs.instrumentalness as instrumental, spotify_songs.valence, "+
 			"spotify_songs.danceability as danceability, spotify_songs.loudness as loudness, spotify_songs.time_signature as timeSignature, "+
-			"spotify_songs.duration_ms as duration, count(songs.id) as occasions "+
+			"spotify_songs.duration_ms as duration, count(songs.id) as occasions, spotify_songs.preview_url as previewURL, spotify_songs.image_url_large as imageURL, spotify_songs.image_url_small as imageURLSmall "+
 			"from songs "+
 			"join artists on artists.id = songs.artist_id "+
 			"join spotify_songs on spotify_songs.song_id = songs.id "+
@@ -140,7 +145,8 @@ func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed)
 			"where transitions.song_from = $1 "+
 			"group by "+
 			"songs.id, songs.title, artists.name, spotify_songs.tempo, spotify_songs.key, spotify_songs.mode, spotify_songs.energy, spotify_songs.instrumentalness, "+
-			"spotify_songs.valence, spotify_songs.danceability, spotify_songs.loudness, spotify_songs.time_signature, spotify_songs.duration_ms", fromSong.ID)
+			"spotify_songs.valence, spotify_songs.danceability, spotify_songs.loudness, spotify_songs.time_signature, spotify_songs.duration_ms, "+
+			"spotify_songs.preview_url, spotify_songs.image_url_large, spotify_songs.image_url_small", fromSong.ID)
 		checkErr(err, "4: Query error!")
 
 		//id, title, artist, previw, cover, numberofsets, bpm, key, rep, energy, instrum, dance, loud, val, timeS, Genre, Dur
@@ -159,7 +165,10 @@ func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed)
 			var timeSignature sql.NullFloat64
 			var duration sql.NullInt64
 			var occasions sql.NullInt64
-			err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration, &occasions)
+			var previewURL sql.NullString
+			var imageURL sql.NullString
+			var imageURLSmall sql.NullString
+			err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &energy, &instrumental, &valence, &danceability, &loudness, &timeSignature, &duration, &occasions, &previewURL, &imageURL, &imageURLSmall)
 			checkErr(err, "Corrupt data format!")
 
 			keyString := convertKey(key.Int64, mode.Int64)
@@ -179,8 +188,9 @@ func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed)
 				TimeSignature: timeSignature.Float64,
 				Duration:      duration.Int64,
 				Genre:         "",
-				PreviewURL:    "",
-				CoverURL:      ""}
+				PreviewURL:    previewURL.String,
+				ImageURL:      imageURL.String,
+				ImageURLSmall: imageURLSmall.String}
 
 			transitions = append(transitions, TransitionDetailed{FromSong: fromSong, ToSong: toSong, Occasions: occasions.Int64})
 		}
@@ -190,13 +200,14 @@ func getTransitionData(fromSong SongDetailed) (transitions []TransitionDetailed)
 
 func simSong(songS SongDetailed) (songT Song) {
 	songT = Song{
-		ID:         songS.ID,
-		Title:      songS.Title,
-		Artist:     songS.Artist,
-		BPM:        songS.BPM,
-		Key:        songS.Key,
-		Duration:   songS.Duration,
-		PreviewURL: songS.PreviewURL,
-		CoverURL:   songS.CoverURL}
+		ID:            songS.ID,
+		Title:         songS.Title,
+		Artist:        songS.Artist,
+		BPM:           songS.BPM,
+		Key:           songS.Key,
+		Duration:      songS.Duration,
+		PreviewURL:    songS.PreviewURL,
+		ImageURL:      songS.ImageURL,
+		ImageURLSmall: songS.ImageURLSmall}
 	return
 }

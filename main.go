@@ -3,13 +3,16 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 const (
@@ -30,9 +33,43 @@ func main() {
 	router.HandleFunc(apiPath+"/songs/get/{id}", getSongDetails).Methods("GET")
 	router.HandleFunc(apiPath+"/songs/get/{id}/all", getAllSongDetails).Methods("GET")
 
-	corsHeader := handlers.AllowedOrigins([]string{"*"})
-	http.ListenAndServe(":8000", handlers.CORS(corsHeader)(router))
-	fmt.Println("Started server!")
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000", "*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"Content-Type", "songTitle"},
+		Debug:            false, //TODO: Disable for production
+	})
+
+	handler := cors.Handler(router)
+
+	server := &http.Server{
+		Addr: "127.0.0.1:8000",
+		// Good practice to set timeouts to avoid Slowloris attacks.
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      handler, // Pass our instance of gorilla/mux in.
+	}
+	log.Println("Configured server")
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	log.Println("Started server")
+
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
+
+	// Block until we receive our signal.
+	<-c
+
+	log.Println("Server Status: offline \n\n\n")
+	os.Exit(0)
 }
 
 func initDB() *sql.DB {

@@ -21,8 +21,8 @@ const (
 
 func init() {
 	//initialize enviromental variables
-	err := godotenv.Load()
-	checkErr(err, "Unable to load env variables!")
+	// err := godotenv.Load()
+	// checkErr(err, "Unable to load env variables!")
 }
 
 func main() {

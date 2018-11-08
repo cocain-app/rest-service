@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"sort"
 
@@ -12,6 +11,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
+/*----------------------------------------------------
+Transitions - /songs/transitions
+----------------------------------------------------*/
 func getTransitions(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
 	fmt.Println(songID)
@@ -45,69 +47,26 @@ func getTransitions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rTransitions)
 }
 
+/*----------------------------------------------------
+Song Search - /search
+----------------------------------------------------*/
 func getSongs(w http.ResponseWriter, r *http.Request) {
-	songTitle := r.Header.Get("songTitle")
-	fmt.Println(songTitle)
+	query := r.Header.Get("query")
+	fmt.Println(query)
+	fromBpm := r.Header.Get("fromBpm")
+	toBpm := r.Header.Get("toBpm")
+	key := r.Header.Get("key")
+	mode := r.Header.Get("mode")
 
-	var songs []SearchSong
-
-	if songTitle != "" {
-
-		queryTitle := "%" + songTitle + "%"
-
-		db := initDB()
-		defer db.Close()
-		rows, err := db.Query("select songs.id as id, songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, "+
-			"spotify_songs.key as key, spotify_songs.mode as mode, spotify_songs.duration_ms as duration, count(songs.id) as score, "+
-			"spotify_songs.preview_url as previewURL, spotify_songs.image_url_large as imageURL, spotify_songs.image_url_small as imageURLSmall "+
-			"from songs join artists on artists.id = songs.artist_id join spotify_songs on spotify_songs.song_id = songs.id "+
-			"where title ILIKE $1 group by songs.id, artists.id, spotify_songs.tempo, spotify_songs.key, spotify_songs.mode, "+
-			"spotify_songs.preview_url, spotify_songs.image_url_large, spotify_songs.image_url_small, "+
-			"spotify_songs.duration_ms order by score desc limit 10 ", queryTitle)
-		checkErr(err, "2: Query error!")
-
-		titleLength := len(songTitle)
-
-		for rows.Next() {
-			var id sql.NullString
-			var title sql.NullString
-			var artist sql.NullString
-			var bpm sql.NullFloat64
-			var key sql.NullInt64
-			var mode sql.NullInt64
-			var duration sql.NullInt64
-			var score sql.NullInt64
-			var previewURL sql.NullString
-			var imageURL sql.NullString
-			var imageURLSmall sql.NullString
-			err = rows.Scan(&id, &title, &artist, &bpm, &key, &mode, &duration, &score, &previewURL, &imageURL, &imageURLSmall)
-			checkErr(err, "Corrupt data format!")
-
-			keyString := convertKey(key.Int64, mode.Int64)
-
-			songs = append(songs, SearchSong{
-				Song: Song{
-					ID:            id.String,
-					Title:         title.String,
-					Artist:        artist.String,
-					BPM:           round(bpm.Float64, 0.5),
-					Key:           keyString,
-					Duration:      duration.Int64,
-					PreviewURL:    previewURL.String,
-					ImageURL:      imageURL.String,
-					ImageURLSmall: imageURLSmall.String},
-				LenDiff: math.Abs(float64(titleLength - len(title.String)))})
-		}
-
-		sort.Slice(songs, func(i, j int) bool {
-			return songs[i].LenDiff < songs[j].LenDiff
-		})
-	}
+	songs := searchQuery(query, fromBpm, toBpm, key, mode)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(songs)
 }
 
+/*----------------------------------------------------
+Song Details - /song/get
+----------------------------------------------------*/
 func getSongDetails(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
 	fmt.Println(songID)
@@ -154,6 +113,9 @@ func getSongDetails(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(song)
 }
 
+/*----------------------------------------------------
+DEV: All Song Details - /songs/get/.../all
+----------------------------------------------------*/
 func getAllSongDetails(w http.ResponseWriter, r *http.Request) {
 	songID := mux.Vars(r)["id"]
 	fmt.Println(songID)

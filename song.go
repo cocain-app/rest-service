@@ -6,8 +6,8 @@ import (
 
 //SearchSong ...
 type SearchSong struct {
-	Song    Song    `json:"Song,omitempty"`
-	LenDiff float64 `json:"LenDiff,omitempty"`
+	Song    Song  `json:"Song,omitempty"`
+	LenDiff int64 `json:"LenDiff,omitempty"`
 }
 
 //Song ...

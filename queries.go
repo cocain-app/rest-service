@@ -40,11 +40,11 @@ func searchQuery(queryS, bpm1, bpm2, key, mode string) (songs []SearchSong) {
 			sb.WriteString(" and ")
 			sb.WriteString(bpm2)
 		} else {
-			value, err := strconv.Atoi(bpm1)
+			value, err := strconv.ParseFloat(bpm1, 64)
 			checkErr(err, "Invalid data type for fromBpm")
-			sb.WriteString(strconv.Itoa(value - 1))
+			sb.WriteString(fmt.Sprintf("%f", value-0.5))
 			sb.WriteString(" and ")
-			sb.WriteString(strconv.Itoa(value + 1))
+			sb.WriteString(fmt.Sprintf("%f", value+0.5))
 		}
 		sb.WriteString(" ")
 	}
@@ -63,7 +63,7 @@ func searchQuery(queryS, bpm1, bpm2, key, mode string) (songs []SearchSong) {
 
 	options = sb.String()
 
-	fmt.Println(options)
+	//fmt.Println(options)
 
 	sqlQuery := fmt.Sprintf("select songs.id as id, songs.title as title, artists.name as artist, spotify_songs.tempo as bpm, "+
 		"spotify_songs.key as key, spotify_songs.mode as mode, spotify_songs.duration_ms as duration, levenshtein('%s',title) as diff, "+

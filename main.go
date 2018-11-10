@@ -36,7 +36,7 @@ func main() {
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "*"},
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"Content-Type", "songTitle"},
+		AllowedHeaders:   []string{"Content-Type", "*"},
 		Debug:            false, //TODO: Disable for production
 	})
 
